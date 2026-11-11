@@ -18,10 +18,20 @@ jobs:
         with:
           gradle-version: 8.7
 
-      - name: Find project folder
+      - name: Prepare project
         id: find
         run: |
-          f=$(find . -name settings.gradle.kts | head -n1)
+          f=$(find . -name settings.gradle.kts -not -path './.git/*' | head -n1)
+          if [ -z "$f" ]; then
+            z=$(find . -name '*.zip' -not -path './.git/*' | head -n1)
+            if [ -z "$z" ]; then
+              echo "ERROR: repo me project files bhi nahi aur zip bhi nahi"
+              ls -la
+              exit 1
+            fi
+            unzip -q -o "$z" -d extracted
+            f=$(find extracted -name settings.gradle.kts | head -n1)
+          fi
           echo "dir=$(dirname "$f")" >> "$GITHUB_OUTPUT"
 
       - name: Build debug APK
